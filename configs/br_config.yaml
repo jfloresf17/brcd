@@ -1,0 +1,66 @@
+wandb:
+  project: "BR-Segmentation"
+  name: "SRSegLit-30K_Multitask_DLinkUnet++CSI"
+
+task: "multi_task"  # Task type: "road" for road segmentation, "building" for building segmentation
+
+dataset:
+  dataroot_S2: "/home/tidop/masterIA/TFM_BRCD/data/filtered/s2"
+  dataroot_S1: "/home/tidop/masterIA/TFM_BRCD/data/filtered/s1"
+  dataroot_BU: "/home/tidop/masterIA/TFM_BRCD/data/filtered/building"
+  dataroot_RO: "/home/tidop/masterIA/TFM_BRCD/data/filtered/road"
+  val_size: 0.2
+  seed: 42
+
+normalize:
+  apply: true
+  mean:   [0.12165828,0.10568603,0.08159181,0.23003524,0.20707654,0.16470233,-8.50576044,-16.06945187]
+  std:   [0.06433154,0.05428448,0.05062654,0.08027687,0.05549643,0.05513187,4.29034106,4.30891778]
+
+weights:
+  building: 5.28
+  road: 8.44
+
+model:
+  # segmentation model parameters for SRSegLit → SRSeg
+  encoder_name:   "se_resnext101_32x4d"
+  encoder_weights: "imagenet"
+  encoder_depth:  5
+  in_channels:    8
+  super_mid:      3
+  upscale:        4
+  num_classes:    1
+  # super-resolution model checkpoint and I/O channels
+  sr_ckpt:        "/home/tidop/masterIA/TFM_BRCD/checkpoints/checkpoint.tar"
+  sr_in_ch:       3
+  sr_out_ch:      3
+
+training:
+  # lightning Trainer args
+  gpus:           1
+  precision:      '16-mixed'
+  max_epochs:     50
+  # optimizer / dataloader args
+  lr:             0.0001
+  weight_decay:   0.0001
+  batch_size:     16
+  num_workers:    16 
+
+loss:
+  hr_weight:      1.0
+  lr_weight:      0.0
+  consistency_weight: 0.0
+
+callbacks:
+  save:
+    save_dir:     "checkpoints"
+    filename:     "SRSegLit-30K_Multitask_DLinkUnet++CSI_best"
+    save_freq:    10000
+    save_best:    true
+    monitor:      "val/loss"
+    mode:         "min"
+
+  early_stopping:
+    monitor:      "val/loss"
+    patience:     10
+    mode:         "min"

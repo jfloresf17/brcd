@@ -1,0 +1,66 @@
+# UNet++ Multi-Task Segmentation Configuration
+# Configuration for building and road segmentation using UNet++ architecture
+
+# Dataset configuration
+dataset:
+  dataroot_S2: "/home/tidop/masterIA/TFM_BRCD/dataset_brcd/s2"
+  dataroot_S1: "/home/tidop/masterIA/TFM_BRCD/dataset_brcd/s1"
+  dataroot_BU: "/home/tidop/masterIA/TFM_BRCD/dataset_brcd/building"
+  dataroot_RO: "/home/tidop/masterIA/TFM_BRCD/dataset_brcd/road"
+  val_size: 0.2
+  seed: 42
+
+# Model configuration
+model:
+  encoder_name: "se_resnext101_32x4d"     # Encoder backbone (resnet34, efficientnet-b0, etc.)
+  encoder_weights: "imagenet"             # Pre-trained weights
+  in_channels: 8                          # Input channels: S1 (4) + S2 (4) bands  
+  sr_ckpt: "../checkpoints/checkpoint.tar"  # Path to pre-trained weights for UNet++|
+
+# Training configuration
+training:
+  lr: 1e-4                               # Learning rate
+  weight_decay: 1e-4                     # Weight decay for regularization
+  epochs: 50                             # Maximum training epochs
+  batch_size: 16                         # Batch size
+  num_workers: 16                        # Number of data loading workers
+  devices: 1                             # Number of GPUs to use
+  precision: "16-mixed"                  # Training precision (16, 32)
+
+# Loss configuration
+loss:
+  bce_weight: 0.5                        # Weight for BCE component in loss
+  dice_weight: 0.5                       # Weight for Dice component in loss
+
+# Learning rate scheduler configuration
+scheduler:
+  use_scheduler: true                    # Enable learning rate scheduling
+  factor: 0.5                           # Factor to reduce LR by
+  patience: 10                          # Epochs to wait before reducing LR
+
+# Callback configuration
+callbacks:
+  save:
+    save_dir: "./checkpoints"     # Directory to save checkpoints
+    filename: "unetpp-bestmodel"  # Checkpoint filename pattern
+    save_top_k: 1                       # Number of best checkpoints to keep
+    monitor: "val/loss"           # Metric to monitor for best checkpoint
+    mode: "min"                         # Direction to optimize (min/max)
+    save_freq: 10000                      # Frequency to log visualizations
+  early_stopping:
+    monitor: "val/loss"           # Metric to monitor for early stopping
+    patience: 10                        # Epochs to wait before early stopping
+    mode: "min"                         # Direction to optimize (min/max)
+
+# Weights & Biases configuration
+wandb:
+  project: "BR-Segmentation"          # W&B project name
+  name: "unetpp-building"              # W&B run name
+
+task: "building"  # Task type: "road" for road segmentation, "building" for building segmentation
+
+# Data normalization configuration
+normalize:
+  apply: true                           # Apply normalization
+  mean: [0.12226801, 0.10858469, 0.08363363, 0.24691695, 0.22379585, 0.1748266, -8.43076595, -15.66976366]  # Mean values for 8 channels
+  std: [0.05983988, 0.05078679, 0.04776558, 0.07557484, 0.05582843, 0.05513278, 3.91825605, 3.8881544]   # Std values for 8 channels

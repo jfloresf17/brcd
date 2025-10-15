@@ -1,0 +1,4 @@
+series_id,area_id,center_t1,to_class,kliep_abs,cva_mag_mean,overall_score,change_date
+S01,A01,35,road,0.1123,0.3242,0.21825,2023-06-05
+S01,A01,37,road,0.0946,0.1826,0.1386,2023-06-22
+S01,A01,34,road,0.0053,0.147,0.07615,2023-05-16
